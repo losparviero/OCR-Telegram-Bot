@@ -1,0 +1,7 @@
+{
+	"dependencies": {
+		"dotenv": "^16.0.3",
+		"grammy": "^1.15.2",
+		"node-tesseract-ocr": "^2.2.1"
+	}
+}
