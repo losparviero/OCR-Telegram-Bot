@@ -21,7 +21,7 @@ bot.on("message:text", async (ctx) => {
 bot.on("message:photo", async (ctx) => {
   const file = await ctx.getFile();
   const path = file.file_path;
-
+  await ctx.reply(path);
   const config = {
     lang: "eng",
     oem: 1,
