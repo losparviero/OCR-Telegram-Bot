@@ -44,7 +44,7 @@ bot.on("message:photo", async (ctx) => {
     });
 });
 
-bot.on("message:url", async (ctx) => {
+bot.on("message:entities:url", async (ctx) => {
   if (!ctx.message.text.endsWith(".jpg")) {
     await ctx.reply(
       "*Send a valid image link. Should end with .jpg or .jpeg.*"
