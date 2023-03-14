@@ -91,7 +91,7 @@ bot.on(":photo", async (ctx) => {
       );
       return;
     } else if (error.message.includes(`Call to 'sendMessage' failed`)) {
-      await ctx.reply("*Error contacting Telegram. Please try again.*", {
+      await ctx.reply("*Couldn't read text.*", {
         parse_mode: "Markdown",
         reply_to_message_id: ctx.message.message_id,
       });
