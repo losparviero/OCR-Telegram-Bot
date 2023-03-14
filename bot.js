@@ -20,12 +20,6 @@ bot.command("start", async (ctx) => {
   await ctx.reply("*Welcome!* ✨\nSend an image to get words from it.");
 });
 
-// Messages
-
-bot.on("message:text", async (ctx) => {
-  await ctx.reply("*Send a valid image.*");
-});
-
 // OCR
 
 bot.on("message:photo", async (ctx) => {
