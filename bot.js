@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { Bot, GrammyError, HttpError } from "grammy";
+import { Bot, session, GrammyError, HttpError } from "grammy";
+import { run, sequentialize } from "@grammyjs/runner";
 import { hydrateFiles } from "@grammyjs/files";
 import { hydrate } from "@grammyjs/hydrate";
 import recognize from "tesseractocr";
@@ -8,6 +9,15 @@ import recognize from "tesseractocr";
 // Bot
 
 const bot = new Bot(process.env.BOT_TOKEN);
+
+// Concurrency
+
+function getSessionKey(ctx) {
+  return ctx.chat?.id.toString();
+}
+
+bot.use(sequentialize(getSessionKey));
+bot.use(session({ getSessionKey }));
 
 // Plugins
 
@@ -127,4 +137,4 @@ bot.catch((err) => {
 
 // Run
 
-bot.start();
+run(bot);
