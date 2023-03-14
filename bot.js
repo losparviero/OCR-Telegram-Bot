@@ -90,7 +90,7 @@ bot.on(":photo", async (ctx) => {
         `Error sending message: Bot was blocked by user ${ctx.chat.id}`
       );
       return;
-    } else if (error.message.includes(`Call to "sendMessage" failed`)) {
+    } else if (error.message.includes(`Call to 'sendMessage' failed`)) {
       await ctx.reply("*Error contacting Telegram. Please try again.*", {
         parse_mode: "Markdown",
         reply_to_message_id: ctx.message.message_id,
