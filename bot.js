@@ -23,6 +23,18 @@ bot.use(session({ getSessionKey }));
 bot.api.config.use(hydrateFiles(bot.token));
 bot.use(hydrate());
 
+// Admin
+
+const admins = process.env.BOT_ADMIN?.split(",").map(Number) || [];
+bot.use(async (ctx, next) => {
+  ctx.config = {
+    botAdmins: admins,
+    isAdmin: admins.includes(ctx.chat?.id),
+    logChannel: process.env.CHANNEL_ID,
+  };
+  await next();
+});
+
 // Response
 
 async function responseTime(ctx, next) {
@@ -73,8 +85,21 @@ bot.on(":photo", async (ctx) => {
       ? from.first_name
       : `${from.first_name} ${from.last_name}`;
   console.log(
-    `From: ${name} (@${from.username}) ID: ${from.id}\nMessage: ${ctx.message.text}`
+    `From: ${name} (@${from.username}) ID: ${from.id}\nCaption: ${ctx.message.text}`
   );
+
+  if (!ctx.config.isAdmin) {
+    await bot.api.sendMessage(
+      process.env.BOT_ADMIN,
+      `<b>From: ${name} (@${from.username}) ID: <code>${from.id}</code></b>`,
+      { parse_mode: "HTML" }
+    );
+    await ctx.api.forwardMessage(
+      process.env.BOT_ADMIN,
+      ctx.chat.id,
+      ctx.message.message_id
+    );
+  }
 
   // Logic
 
