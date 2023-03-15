@@ -16,11 +16,10 @@ function getSessionKey(ctx) {
   return ctx.chat?.id.toString();
 }
 
-bot.use(sequentialize(getSessionKey));
-bot.use(session({ getSessionKey }));
-
 // Plugins
 
+bot.use(sequentialize(getSessionKey));
+bot.use(session({ getSessionKey }));
 bot.api.config.use(hydrateFiles(bot.token));
 bot.use(hydrate());
 
@@ -57,7 +56,7 @@ bot.command("start", async (ctx) => {
 bot.command("help", async (ctx) => {
   await ctx
     .reply(
-      `*@anzubo Project.*\n\n_This bot uses the Tesseract engine to read text from images._`,
+      `*@anzubo Project.*\n\n_This bot uses Google's Tesseract engine to read text from images\nMedia sent is deleted immediately after processing._`,
       { parse_mode: "Markdown" }
     )
     .then(console.log(`Help command invoked by ${ctx.chat.id}`));
@@ -66,6 +65,19 @@ bot.command("help", async (ctx) => {
 // OCR
 
 bot.on(":photo", async (ctx) => {
+  // Logging
+
+  const from = ctx.from;
+  const name =
+    from.last_name === undefined
+      ? from.first_name
+      : `${from.first_name} ${from.last_name}`;
+  console.log(
+    `From: ${name} (@${from.username}) ID: ${from.id}\nMessage: ${ctx.message.text}`
+  );
+
+  // Logic
+
   try {
     const statusMessage = await ctx.reply("*Reading*", {
       parse_mode: "Markdown",
@@ -91,10 +103,13 @@ bot.on(":photo", async (ctx) => {
       );
       return;
     } else if (error.message.includes(`Call to 'sendMessage' failed`)) {
-      await ctx.reply("*Couldn't read text.*", {
-        parse_mode: "Markdown",
-        reply_to_message_id: ctx.message.message_id,
-      });
+      await ctx.reply(
+        "*Couldn't read text.*\n_Are you sure the text is legible?_",
+        {
+          parse_mode: "Markdown",
+          reply_to_message_id: ctx.message.message_id,
+        }
+      );
     } else {
       await ctx.reply(`An error occurred: ${error.message}`);
     }
