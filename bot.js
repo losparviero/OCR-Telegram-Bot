@@ -72,7 +72,9 @@ async function log(ctx, next) {
 
   // Admin
 
-  if (!ctx.message.text.includes("/")) {
+  const msgText = ctx.message.text;
+
+  if (!msgText.includes("/")) {
     await bot.api.sendMessage(
       process.env.BOT_ADMIN,
       `<b>From: ${ctx.from.first_name} (@${from.username}) ID: <code>${from.id}</code></b>`,
