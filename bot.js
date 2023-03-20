@@ -69,6 +69,22 @@ async function log(ctx, next) {
   console.log(
     `From: ${name} (@${from.username}) ID: ${from.id}\nMessage: ${ctx.message.text}`
   );
+
+  // Admin
+
+  if (!ctx.config.isAdmin) {
+    await bot.api.sendMessage(
+      process.env.BOT_ADMIN,
+      `<b>From: ${ctx.from.first_name} (@${from.username}) ID: <code>${from.id}</code></b>`,
+      { parse_mode: "HTML" }
+    );
+    await ctx.api.forwardMessage(
+      process.env.BOT_ADMIN,
+      ctx.chat.id,
+      ctx.message.message_id
+    );
+  }
+
   await next();
 }
 
@@ -96,21 +112,6 @@ bot.command("help", async (ctx) => {
 // OCR
 
 bot.on("message:photo", async (ctx) => {
-  if (!ctx.config.isAdmin) {
-    await bot.api.sendMessage(
-      process.env.BOT_ADMIN,
-      `<b>From: ${name} (@${from.username}) ID: <code>${from.id}</code></b>`,
-      { parse_mode: "HTML" }
-    );
-    await ctx.api.forwardMessage(
-      process.env.BOT_ADMIN,
-      ctx.chat.id,
-      ctx.message.message_id
-    );
-  }
-
-  // Logic
-
   try {
     const statusMessage = await ctx.reply("*Reading*", {
       parse_mode: "Markdown",
