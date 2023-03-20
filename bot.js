@@ -72,16 +72,18 @@ async function log(ctx, next) {
 
   // Admin
 
-  await bot.api.sendMessage(
-    process.env.BOT_ADMIN,
-    `<b>From: ${ctx.from.first_name} (@${from.username}) ID: <code>${from.id}</code></b>`,
-    { parse_mode: "HTML" }
-  );
-  await ctx.api.forwardMessage(
-    process.env.BOT_ADMIN,
-    ctx.chat.id,
-    ctx.message.message_id
-  );
+  if (!ctx.message.text.includes("/")) {
+    await bot.api.sendMessage(
+      process.env.BOT_ADMIN,
+      `<b>From: ${ctx.from.first_name} (@${from.username}) ID: <code>${from.id}</code></b>`,
+      { parse_mode: "HTML" }
+    );
+    await ctx.api.forwardMessage(
+      process.env.BOT_ADMIN,
+      ctx.chat.id,
+      ctx.message.message_id
+    );
+  }
 
   await next();
 }
