@@ -122,7 +122,9 @@ bot.on("message:photo", async (ctx) => {
     const path = await file.download();
 
     await Tesseract.recognize(path).then(async ({ data: { text } }) => {
-      await ctx.reply(text, { reply_to_message_id: ctx.message.message_id });
+      await ctx.replyWithHTML(text, {
+        reply_to_message_id: ctx.message.message_id,
+      });
     });
 
     await statusMessage.delete();
