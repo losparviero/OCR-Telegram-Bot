@@ -1,10 +1,24 @@
+#!/usr/bin/env node
+
+/*!
+ * TeleOCR
+ * Copyright (c) 2023
+ *
+ * @author Zubin
+ * @username (GitHub) losparviero
+ * @license AGPL-3.0
+ */
+
+// Add env vars as a preliminary
+
 import dotenv from "dotenv";
 dotenv.config();
-import { Bot, session, GrammyError, HttpError } from "grammy";
+import { Bot, session } from "grammy";
+import { hydrateReply, parseMode } from "@grammyjs/parse-mode";
 import { run, sequentialize } from "@grammyjs/runner";
 import { hydrateFiles } from "@grammyjs/files";
 import { hydrate } from "@grammyjs/hydrate";
-import recognize from "tesseractocr";
+import Tesseract from "tesseract.js";
 
 // Bot
 
@@ -21,7 +35,14 @@ function getSessionKey(ctx) {
 bot.use(sequentialize(getSessionKey));
 bot.use(session({ getSessionKey }));
 bot.api.config.use(hydrateFiles(bot.token));
+bot.use(responseTime);
+bot.use(log);
 bot.use(hydrate());
+bot.use(hydrateReply);
+
+// Parse
+
+bot.api.config.use(parseMode("Markdown"));
 
 // Admin
 
@@ -30,7 +51,6 @@ bot.use(async (ctx, next) => {
   ctx.config = {
     botAdmins: admins,
     isAdmin: admins.includes(ctx.chat?.id),
-    logChannel: process.env.CHANNEL_ID,
   };
   await next();
 });
@@ -44,50 +64,41 @@ async function responseTime(ctx, next) {
   console.log(`Response time: ${after - before} ms`);
 }
 
-bot.use(responseTime);
+// Log
 
-// Commands
-
-bot.command("start", async (ctx) => {
-  if (!ctx.chat.type == "private") {
-    await bot.api.sendMessage(
-      ctx.chat.id,
-      "*Channels and groups are not supported presently.*",
-      { parse_mode: "Markdown" }
-    );
-    return;
-  }
-
-  await ctx
-    .reply("*Welcome!* ✨\n_Send an image to get words from it._", {
-      parse_mode: "Markdown",
-    })
-    .then(console.log("New user added:", ctx.from));
-});
-
-bot.command("help", async (ctx) => {
-  await ctx
-    .reply(
-      `*@anzubo Project.*\n\n_This bot uses Google's Tesseract engine to read text from images\nMedia sent is deleted immediately after processing._`,
-      { parse_mode: "Markdown" }
-    )
-    .then(console.log(`Help command invoked by ${ctx.chat.id}`));
-});
-
-// OCR
-
-bot.on(":photo", async (ctx) => {
-  // Logging
-
+async function log(ctx, next) {
   const from = ctx.from;
   const name =
     from.last_name === undefined
       ? from.first_name
       : `${from.first_name} ${from.last_name}`;
   console.log(
-    `From: ${name} (@${from.username}) ID: ${from.id}\nCaption: ${ctx.message.text}`
+    `From: ${name} (@${from.username}) ID: ${from.id}\nMessage: ${ctx.message.text}`
   );
+  await next();
+}
 
+// Commands
+
+bot.command("start", async (ctx) => {
+  await ctx
+    .reply("*Welcome!* ✨\n_Send an image to get words from it._")
+    .then(console.log("New user added:", ctx.from))
+    .catch((e) => console.log(e));
+});
+
+bot.command("help", async (ctx) => {
+  await ctx
+    .reply(
+      `*@anzubo Project.*\n\n_This bot uses Google's Tesseract engine to read text from images\nMedia sent is deleted immediately after processing._`
+    )
+    .then(console.log(`Help command invoked by ${ctx.chat.id}`))
+    .catch((e) => console.log(e));
+});
+
+// OCR
+
+bot.on("message:photo", async (ctx) => {
   if (!ctx.config.isAdmin) {
     await bot.api.sendMessage(
       process.env.BOT_ADMIN,
@@ -109,8 +120,11 @@ bot.on(":photo", async (ctx) => {
     });
     const file = await ctx.getFile();
     const path = await file.download();
-    const text = await recognize(path);
-    await ctx.reply(text, { reply_to_message_id: ctx.message.message_id });
+
+    await Tesseract.recognize(path).then(async ({ data: { text } }) => {
+      await ctx.reply(text, { reply_to_message_id: ctx.message.message_id });
+    });
+
     await statusMessage.delete();
   } catch (error) {
     console.log(`Error sending message: ${error}`);
@@ -131,7 +145,6 @@ bot.on(":photo", async (ctx) => {
       await ctx.reply(
         "*Couldn't read text.*\n_Are you sure the text is legible?_",
         {
-          parse_mode: "Markdown",
           reply_to_message_id: ctx.message.message_id,
         }
       );
@@ -145,34 +158,8 @@ bot.on(":photo", async (ctx) => {
 
 bot.on(":text", async (ctx) => {
   await ctx.reply("*Send a valid image.*", {
-    parse_mode: "Markdown",
     reply_to_message_id: ctx.message.message_id,
   });
-});
-
-// Error
-
-bot.catch((err) => {
-  const ctx = err.ctx;
-  console.error(
-    "Error while handling update",
-    ctx.update.update_id,
-    "\nQuery:",
-    ctx.msg.text
-  );
-  const e = err.error;
-  if (e instanceof GrammyError) {
-    console.error("Error in request:", e.description);
-    if (e.description === "Forbidden: bot was blocked by the user") {
-      console.log("Bot was blocked by the user");
-    } else {
-      ctx.reply("An error occurred");
-    }
-  } else if (e instanceof HttpError) {
-    console.error("Could not contact Telegram:", e);
-  } else {
-    console.error("Unknown error:", e);
-  }
 });
 
 // Run
