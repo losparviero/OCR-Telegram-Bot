@@ -14,7 +14,6 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { Bot, session } from "grammy";
-import { hydrateReply, parseMode } from "@grammyjs/parse-mode";
 import { run, sequentialize } from "@grammyjs/runner";
 import { hydrateFiles } from "@grammyjs/files";
 import { hydrate } from "@grammyjs/hydrate";
@@ -38,11 +37,6 @@ bot.api.config.use(hydrateFiles(bot.token));
 bot.use(responseTime);
 bot.use(log);
 bot.use(hydrate());
-bot.use(hydrateReply);
-
-// Parse
-
-bot.api.config.use(parseMode("Markdown"));
 
 // Admin
 
@@ -82,7 +76,9 @@ async function log(ctx, next) {
 
 bot.command("start", async (ctx) => {
   await ctx
-    .reply("*Welcome!* ✨\n_Send an image to get words from it._")
+    .reply("*Welcome!* ✨\n_Send an image to get words from it._", {
+      parse_mode: "Markdown",
+    })
     .then(console.log("New user added:", ctx.from))
     .catch((e) => console.log(e));
 });
@@ -90,7 +86,8 @@ bot.command("start", async (ctx) => {
 bot.command("help", async (ctx) => {
   await ctx
     .reply(
-      `*@anzubo Project.*\n\n_This bot uses Google's Tesseract engine to read text from images\nMedia sent is deleted immediately after processing._`
+      `*@anzubo Project.*\n\n_This bot uses Google's Tesseract engine to read text from images\nMedia sent is deleted immediately after processing._`,
+      { parse_mode: "Markdown" }
     )
     .then(console.log(`Help command invoked by ${ctx.chat.id}`))
     .catch((e) => console.log(e));
@@ -122,7 +119,7 @@ bot.on("message:photo", async (ctx) => {
     const path = await file.download();
 
     await Tesseract.recognize(path).then(async ({ data: { text } }) => {
-      await ctx.replyWithHTML(text, {
+      await ctx.reply(text, {
         reply_to_message_id: ctx.message.message_id,
       });
     });
@@ -147,6 +144,7 @@ bot.on("message:photo", async (ctx) => {
       await ctx.reply(
         "*Couldn't read text.*\n_Are you sure the text is legible?_",
         {
+          parse_mode: "Markdown",
           reply_to_message_id: ctx.message.message_id,
         }
       );
@@ -160,6 +158,7 @@ bot.on("message:photo", async (ctx) => {
 
 bot.on(":text", async (ctx) => {
   await ctx.reply("*Send a valid image.*", {
+    parse_mode: "Markdown",
     reply_to_message_id: ctx.message.message_id,
   });
 });

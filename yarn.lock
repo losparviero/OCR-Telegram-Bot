@@ -116,11 +116,6 @@
   dependencies:
     abort-controller "^3.0.0"
 
-"@grammyjs/parse-mode@^1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@grammyjs/parse-mode/-/parse-mode-1.6.0.tgz#950016e9c0463136cf34499b27d8b0c71f6aecd7"
-  integrity sha512-RYhdTauajo6fumImOZ0RLq0zyB7Smh3QS8t9mkppUV+BCX6WbEv2R2UY2vRpQlX/TKYD0x/DLNyEjPwgZoEdSw==
-
 "@grammyjs/runner@^2.0.2":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@grammyjs/runner/-/runner-2.0.2.tgz#7f1c6c8dba569c4c29c056f46b19ea74c6e67ad1"
