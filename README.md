@@ -14,7 +14,7 @@ This bot utilises Google's Tesseract to perform OCR on images. Tesseract is an o
 
 1. Clone git repo.
 2. Run ```npm i``` in project folder.
-3. Rename .env.exampple to .env and provide bot token.
+3. Rename .env.example to .env and provide bot token.
 4. Run ```node bot``` to start the bot.
 
 #### It's advisable to run the bot using PM2 or any startup manager for persistent execution.
