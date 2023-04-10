@@ -61,25 +61,30 @@ async function responseTime(ctx, next) {
 // Log
 
 async function log(ctx, next) {
-  const from = ctx.from;
+  let message = ctx.message?.text || ctx.channelPost?.text || undefined;
+  const from = ctx.from || ctx.chat;
   const name =
-    from.last_name === undefined
-      ? from.first_name
-      : `${from.first_name} ${from.last_name}`;
+    `${from.first_name || ""} ${from.last_name || ""}`.trim() || ctx.chat.title;
+
+  // Console
+
   console.log(
-    `From: ${name} (@${from.username}) ID: ${from.id}\nMessage: ${ctx.message.text}`
+    `From: ${name} (@${from.username}) ID: ${from.id}\nMessage: ${message}`
   );
 
-  // Admin
+  // Channel
 
-  const msgText = ctx.message.text;
-
-  if (!msgText.includes("/")) {
+  if (
+    ctx.message &&
+    !ctx.message?.text?.includes("/") &&
+    process.env.BOT_ADMIN
+  ) {
     await bot.api.sendMessage(
       process.env.BOT_ADMIN,
-      `<b>From: ${ctx.from.first_name} (@${from.username}) ID: <code>${from.id}</code></b>`,
+      `<b>From: ${name} (@${from.username}) ID: <code>${from.id}</code></b>`,
       { parse_mode: "HTML" }
     );
+
     await ctx.api.forwardMessage(
       process.env.BOT_ADMIN,
       ctx.chat.id,
@@ -89,6 +94,8 @@ async function log(ctx, next) {
 
   await next();
 }
+
+bot.use(log);
 
 // Commands
 
